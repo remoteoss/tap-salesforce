@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 import asyncio
 import concurrent.futures
 import json
@@ -124,11 +125,16 @@ def create_property_schema(field, mdata):
 
 
 # pylint: disable=too-many-branches,too-many-statements
-def do_discover(sf):
-    """Describes a Salesforce instance's objects and generates a JSON schema for each field."""
-    global_description = sf.describe()
+def do_discover(sf: Salesforce, streams: list[str]):
+    if not streams:
+        """Describes a Salesforce instance's objects and generates a JSON schema for each field."""
+        LOGGER.info(f"Start discovery for all streams")
+        global_description = sf.describe()
+        objects_to_discover = {o['name'] for o in global_description['sobjects']}
+    else:
+        LOGGER.info(f"Start discovery: {streams=}")
+        objects_to_discover = streams
 
-    objects_to_discover = {o['name'] for o in global_description['sobjects']}
     key_properties = ['Id']
 
     sf_custom_setting_objects = []
@@ -423,7 +429,7 @@ async def sync_catalog_entry(sf, catalog_entry, state):
     mdata = metadata.to_map(catalog_entry['metadata'])
 
     if not stream_is_selected(mdata):
-        LOGGER.info("%s: Skipping - not selected", stream_name)
+        LOGGER.debug("%s: Skipping - not selected", stream_name)
         return
 
     LOGGER.info("%s: Starting", stream_name)
@@ -518,7 +524,7 @@ def main_impl():
         sf.login()
 
         if args.discover:
-            do_discover(sf)
+            do_discover(sf, CONFIG.get("streams_to_discover", []))
         elif args.properties or args.catalog:
             catalog = args.properties or args.catalog.to_dict()
             state = build_state(args.state, catalog)
