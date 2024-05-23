@@ -416,6 +416,7 @@ def pop_deselected_schema(
 
 
 async def sync_catalog_entry(sf, catalog_entry, state):
+    LOGGER.info("XXX - State: %s", state)
     stream_version = get_stream_version(catalog_entry, state)
     stream = catalog_entry['stream']
     stream_alias = catalog_entry.get('stream_alias')
@@ -464,6 +465,7 @@ async def sync_catalog_entry(sf, catalog_entry, state):
                 catalog_entry['tap_stream_id'],
                 replication_key,
                 bookmark)
+            print("XXX - writing state: " + str(state))
             singer.write_state(state)
     else:
         state_msg_threshold = CONFIG.get('state_message_threshold', 1000)
@@ -526,8 +528,14 @@ def main_impl():
         if args.discover:
             do_discover(sf, CONFIG.get("streams_to_discover", []))
         elif args.properties or args.catalog:
+            LOGGER.info("XXX - arg properties" + args.properties)
+            LOGGER.info("XXX - arg catalog: " + args.catalog)
+            LOGGER.info("XXX - arg state: " + args.state)
             catalog = args.properties or args.catalog.to_dict()
+            LOGGER.info("XXX - catalog: " + catalog)
             state = build_state(args.state, catalog)
+            LOGGER.info("XXX - built state: " + args.state)
+
             do_sync(sf, catalog, state)
     finally:
         if sf:

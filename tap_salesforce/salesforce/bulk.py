@@ -135,7 +135,7 @@ class Bulk:
                 tap_stream_id = catalog_entry["tap_stream_id"]
                 state = singer.write_bookmark(state, tap_stream_id, "JobID", job_id)
                 state = singer.write_bookmark(
-                    state, tap_stream_id, "BatchIDs", batch_status["completed"][:]
+                    state, tap_stream_id, "BatchIDs", batch_`status["completed"][:]
                 )
 
                 for completed_batch_id in batch_status["completed"]:
